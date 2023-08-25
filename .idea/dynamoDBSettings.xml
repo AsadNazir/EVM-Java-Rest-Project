@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DynamoDBConfiguration">
+    <option name="databaseConfigurations">
+      <map>
+        <entry key="23aebcae-8197-491d-b83c-e71fbdf003e8">
+          <value>
+            <DatabaseConfigInternal>
+              <option name="connectionType" value="Custom endpoint" />
+              <option name="customEndpoint" value="http://localhost:9999" />
+              <option name="id" value="23aebcae-8197-491d-b83c-e71fbdf003e8" />
+              <option name="label" value="DynamoDB" />
+              <option name="region" />
+              <option name="version" value="2" />
+            </DatabaseConfigInternal>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="version" value="2" />
+  </component>
+</project>
