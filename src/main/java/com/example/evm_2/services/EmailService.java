@@ -27,7 +27,7 @@ public class EmailService {
         return instance;
     }
 
-    public boolean sendMail(String recipient) {
+    public boolean sendMail(String recipient, String Msg) {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -45,7 +45,7 @@ public class EmailService {
             message.setFrom(new InternetAddress(username));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
             message.setSubject("Subject");
-            message.setText("Hello, this is a test email!");
+            message.setText(Msg);
 
             Transport.send(message);
 

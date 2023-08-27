@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.document.*;
 
 import java.util.List;
 
+//Voter Service for all the Db related work
 public class VoterService {
 
     private static VoterService vS;
@@ -29,6 +30,7 @@ public class VoterService {
     }
 
 
+    //Getting voter by CNIC
     public Voter getVoterByCnic(String cnic, String name) {
         try {
             AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();

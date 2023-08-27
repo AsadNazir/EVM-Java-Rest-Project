@@ -18,7 +18,7 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/login")
-    public String hello(String Jsondata) {
+    public String login(String Jsondata) {
 
         Voter voter = null;
         try {

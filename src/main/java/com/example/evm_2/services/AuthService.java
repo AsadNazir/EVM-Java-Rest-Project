@@ -1,23 +1,11 @@
 package com.example.evm_2.services;
 
-
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.evm_2.commons.*;
 import com.example.evm_2.domain.Voter;
-
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
 
 public class AuthService {
     private static AuthService instance;
@@ -108,10 +96,26 @@ public class AuthService {
 //    }
 
 
+    public boolean isVerified(String jwtToken) {
+        //Takes the Header Authorization and just returns the payload
+        DecodedJWT decodedJWT = JWT.require(Credentials.SECRET_KEY_JWT)
+                .build()
+                .verify(jwtToken);
+
+        if (decodedJWT.getSubject().equalsIgnoreCase("admin"))
+            return true;
+
+        return false;
+    }
+
     public Object Register(Voter voter) {
         try {
             AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();
 
+
+            if (voter.getName() == null || voter.getCnic() == null || voter.getCnic().length() < 11 || voter.getPassword() == null || voter.getEmail() == null) {
+                return new Response(true, "Invalid or Incomplete Credentials");
+            }
 
             Voter v = VoterService.getInstance().getVoterByCnic(voter.getCnic(), voter.getName());
             if (v != null) {
@@ -119,7 +123,7 @@ public class AuthService {
             }
 
             boolean result = VoterService.getInstance().addVoter(voter);
-            boolean emailSent = EmailService.getInstance().sendMail("bsef20m522@pucit.edu.pk");
+            boolean emailSent = EmailService.getInstance().sendMail("bsef20m522@pucit.edu.pk", "Hi " + voter.getName() + "\n\nYou have been successfully registered!\n\n Thanks !");
 
 
             if (result && emailSent)
