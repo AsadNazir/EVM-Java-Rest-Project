@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.example.evm_2.commons.DynamoDb;
-import com.example.evm_2.commons.Response;
+import com.example.evm_2.commons.CustomResponse;
 import com.example.evm_2.domain.Party;
 
 import java.util.ArrayList;
@@ -65,22 +65,18 @@ public class PartyService {
 
             Table T = db.getTable("Party");
 
-            Item I = new Item()
-                    .withPrimaryKey("regNo", party.getRegNo())
-                    .withString("partyName", party.getPartyName())
-                    .withString("partyLeader", party.getPartyLeader())
-                    .withString("electionSign", party.getElectionSign());
+            Item I = new Item().withPrimaryKey("regNo", party.getRegNo()).withString("partyName", party.getPartyName()).withString("partyLeader", party.getPartyLeader()).withString("electionSign", party.getElectionSign());
 
-            T.putItem(I);
+            var t = T.putItem(I);
 
-            return new Response(false, "added successfully");
+            return new CustomResponse(false, "added successfully");
 
         } catch (Exception E) {
             E.printStackTrace();
 
         }
 
-        return new Response(false, "Error Occuered");
+        return new CustomResponse(false, "Error Occurred");
 
     }
 

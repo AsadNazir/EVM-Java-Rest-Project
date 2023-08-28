@@ -1,6 +1,6 @@
 package com.example.evm_2.commons;
 
-public class Response {
+public class CustomResponse {
     boolean error;
     Object data;
 
@@ -12,7 +12,7 @@ public class Response {
                 '}';
     }
 
-    public Response() {
+    public CustomResponse() {
     }
 
     public boolean isError() {
@@ -31,7 +31,7 @@ public class Response {
         this.data = data;
     }
 
-    public Response(boolean error, Object data) {
+    public CustomResponse(boolean error, Object data) {
         this.error = error;
         this.data = data;
     }

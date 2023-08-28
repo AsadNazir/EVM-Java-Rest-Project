@@ -5,6 +5,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.evm_2.commons.*;
+import com.example.evm_2.domain.Admin;
 import com.example.evm_2.domain.Voter;
 
 public class AuthService {
@@ -26,87 +27,50 @@ public class AuthService {
         return instance;
     }
 
-//    public Object Register(Voter voter) {
-//
-//        try (Connection C = SqlDb.getConnection();
-//             PreparedStatement Ps = C.prepareStatement(VoterSql.REGISTER);
-//        ) {
-//            // Set values for the parameters
-//            Ps.setString(1, voter.getCnic());
-//            Ps.setString(2, voter.getName());
-//            Ps.setString(3, voter.getPassword());
-//            Ps.setString(4, voter.getEmail());
-//
-//            int affected = Ps.executeUpdate();
-//
-//            if (affected > 0) {
-//                return new Response(true, "Successfully registered.");
-//            } else {
-//                return new Response(false, "Registration failed.");
-//            }
-//
-//        } catch (Exception E) {
-//            E.printStackTrace();
-//        }
-//
-//
-//        return new Response(true, null);
-//    }
+    public Object AdminLogin(Admin admin) {
+        try {
+            if (admin.getName().equalsIgnoreCase("admin") && admin.getPassword().equals("admin")) {
+                JWTCreator.Builder jwtBuilder = JWT.create()
+                        .withClaim("name", admin.getName())
+                        .withSubject("admin")
+                        .withIssuer("Evm");
 
-
-//    public Object Login(Voter voter) {
-//
-//
-//        ArrayList<Voter> V = new ArrayList<>();
-//
-//        try (Connection C = SqlDb.getConnection();
-//             PreparedStatement Ps = C.prepareStatement(VoterSql.GET_VOTER_BY_CNIC);
-//        ) {
-//            Ps.setString(1, voter.getCnic());
-//
-//            try (ResultSet rs = Ps.executeQuery()) {
-//
-//                while (rs.next()) {
-//                    String cnic = rs.getString("cnic");
-//                    String name = rs.getString("name");
-//                    String pwd = rs.getString("password");
-//                    String email = rs.getString("email");
-//
-//                    V.add(new Voter(email, cnic, pwd, name));
-//                }
-//
-//                if (V.isEmpty())
-//                    return new Response(true, null);
-//
-//                JWTCreator.Builder jwtBuilder = JWT.create()
-//                        .withClaim("cnic", "123")
-//                        .withClaim("email", voter.getEmail())
-//                        .withClaim("name", voter.getName())
-//                        .withSubject("voter")
-//                        .withIssuer("EVM");
-//
-//                return new Response(true, jwtBuilder.sign(Credentials.SECRET_KEY_JWT));
-//            }
-//        } catch (Exception E) {
-//            E.printStackTrace();
-//        }
-//
-//
-//        return new Response(true, null);
-//    }
+                return new CustomResponse(false, jwtBuilder.sign(Credentials.SECRET_KEY_JWT));
+            }
+        } catch (Exception E) {
+            E.printStackTrace();
+            return new CustomResponse(true, "Some Error Occurred");
+        }
+        return new CustomResponse(false, "Wrong Credentials");
+    }
 
 
     public boolean isVerified(String jwtToken) {
         //Takes the Header Authorization and just returns the payload
-        DecodedJWT decodedJWT = JWT.require(Credentials.SECRET_KEY_JWT)
-                .build()
-                .verify(jwtToken);
+        try {
+            DecodedJWT decodedJWT = JWT.require(Credentials.SECRET_KEY_JWT)
+                    .build()
+                    .verify(jwtToken);
+            return decodedJWT.getIssuer().equalsIgnoreCase("Evm");
+        } catch (Exception E) {
+            E.printStackTrace();
+            return false;
+        }
 
-        if (decodedJWT.getSubject().equalsIgnoreCase("admin"))
-            return true;
-
-        return false;
     }
+
+    public boolean isAdmin(String jwtToken) {
+        try {//Takes the Header Authorization and just returns the payload
+            DecodedJWT decodedJWT = JWT.require(Credentials.SECRET_KEY_JWT)
+                    .build()
+                    .verify(jwtToken);
+            return decodedJWT.getSubject().equalsIgnoreCase("admin");
+        } catch (Exception E) {
+            E.printStackTrace();
+            return false;
+        }
+    }
+
 
     public Object Register(Voter voter) {
         try {
@@ -114,12 +78,12 @@ public class AuthService {
 
 
             if (voter.getName() == null || voter.getCnic() == null || voter.getCnic().length() < 11 || voter.getPassword() == null || voter.getEmail() == null) {
-                return new Response(true, "Invalid or Incomplete Credentials");
+                return new CustomResponse(true, "Invalid or Incomplete Credentials");
             }
 
             Voter v = VoterService.getInstance().getVoterByCnic(voter.getCnic(), voter.getName());
             if (v != null) {
-                return new Response(false, "You have already Registered !");
+                return new CustomResponse(false, "You have already Registered !");
             }
 
             boolean result = VoterService.getInstance().addVoter(voter);
@@ -127,7 +91,7 @@ public class AuthService {
 
 
             if (result && emailSent)
-                return new Response(false, "You have been registered successfully");
+                return new CustomResponse(false, "You have been registered successfully");
 
 
         } catch (Exception E) {
@@ -135,7 +99,7 @@ public class AuthService {
         }
 
 
-        return new Response(true, "Error Occurred while registering");
+        return new CustomResponse(true, "Error Occurred while registering");
     }
 
 
@@ -147,25 +111,25 @@ public class AuthService {
 
             Voter v = VoterService.getInstance().getVoterByCnic(voter.getCnic(), voter.getName());
             if (v == null) {
-                return new Response(false, "Invalid Credentials");
+                return new CustomResponse(false, "Invalid Credentials");
             }
 
 
             JWTCreator.Builder jwtBuilder = JWT.create()
-                    .withClaim("cnic", "123")
+                    .withClaim("cnic", voter.getCnic())
                     .withClaim("email", voter.getEmail())
                     .withClaim("name", voter.getName())
                     .withSubject("voter")
-                    .withIssuer("EVM");
+                    .withIssuer("Evm");
 
-            return new Response(false, jwtBuilder.sign(Credentials.SECRET_KEY_JWT));
+            return new CustomResponse(false, jwtBuilder.sign(Credentials.SECRET_KEY_JWT));
 
 
         } catch (Exception E) {
             E.printStackTrace();
         }
 
-        return new Response(true, "Error Occurred while Authenticating ");
+        return new CustomResponse(true, "Error Occurred while Authenticating ");
     }
 
 

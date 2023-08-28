@@ -1,7 +1,9 @@
 package com.example.evm_2.resources;
 
+import com.example.evm_2.domain.Admin;
 import com.example.evm_2.domain.Voter;
 import com.example.evm_2.services.AuthService;
+import com.example.evm_2.services.Scheduler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -14,6 +16,7 @@ import jakarta.ws.rs.core.MediaType;
 public class AuthResource {
 
     ObjectMapper objectMapper = new ObjectMapper();
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -25,7 +28,7 @@ public class AuthResource {
             voter = objectMapper.readValue(Jsondata, Voter.class);
 
             return
-            objectMapper.writeValueAsString(AuthService.getInstance().Login(voter));
+                    objectMapper.writeValueAsString(AuthService.getInstance().Login(voter));
 
         } catch (Exception E) {
             E.printStackTrace();
@@ -43,9 +46,37 @@ public class AuthResource {
         Voter voter;
         try {
             voter = objectMapper.readValue(Jsondata, Voter.class);
-            Response res = (Response) AuthService.getInstance().Register(voter);
+            CustomResponse res = (CustomResponse) AuthService.getInstance().Register(voter);
 
             return objectMapper.writeValueAsString(res);
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+
+        return null;
+    }
+
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/adminLogin")
+    public String adminLogin(String Jsondata) {
+
+        try {
+
+            Admin admin = null;
+            try {
+                admin = objectMapper.readValue(Jsondata, Admin.class);
+
+                return
+                        objectMapper.writeValueAsString(AuthService.getInstance().AdminLogin(admin));
+
+            } catch (Exception E) {
+                E.printStackTrace();
+            }
+
 
         } catch (Exception E) {
             E.printStackTrace();

@@ -84,6 +84,10 @@ public class VoterService {
 
     }
 
+//    public boolean castVote(Object vote)
+//    {}
+
+
 
 
 }
