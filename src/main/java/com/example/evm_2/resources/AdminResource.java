@@ -4,6 +4,7 @@ import com.example.evm_2.domain.Party;
 import com.example.evm_2.services.AuthService;
 import com.example.evm_2.services.PartyService;
 import com.example.evm_2.services.Scheduler;
+import com.example.evm_2.services.VoterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.*;
 import com.example.evm_2.commons.*;
@@ -24,6 +25,11 @@ public class AdminResource {
         try {
             if (this.isAdmin(authorizationHeader)) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            //Checking if voting has started or not
+            if (VoterService.getInstance().isVotingQueueReady()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has satrted cannot add more Parties")).build();
             }
 
             Party P = objectMapper.readValue(party, Party.class);
@@ -64,6 +70,11 @@ public class AdminResource {
         try {
             if (!isAdmin(authorizationHeader)) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            //if voting has started or not
+            if (VoterService.getInstance().isVotingQueueReady()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has already been started")).build();
             }
             Scheduler scheduler = new Scheduler();
 

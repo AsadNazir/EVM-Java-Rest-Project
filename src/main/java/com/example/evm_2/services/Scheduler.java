@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 //Scheduler Class responsible for handling schedule of result announcement
 public class Scheduler {
 
-    String votingQueueUrl;
     private final SqsService sqsService;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -65,7 +64,7 @@ public class Scheduler {
             sqsService.sendMsg("admin", "Voting Started");
 
             //Starting the Scheduler to run the Task Function after exactly time seconds
-            scheduler.schedule(this::Task, 30, TimeUnit.SECONDS);
+            scheduler.schedule(this::Task, time, TimeUnit.SECONDS);
         } catch (Exception E) {
             E.printStackTrace();
         }
@@ -81,7 +80,7 @@ public class Scheduler {
     }
 
 
-    private List<Vote> CountVote() {
+    public List<Vote> CountVote() {
 
         //Here is the logic for counting all the votes
         List<Vote> AllVotes = new ArrayList<>();
@@ -144,8 +143,7 @@ public class Scheduler {
 
 
     //Function to push votes to the db takes a Vote List
-    public boolean pushVotesToDb(List<Vote> votes) {
-
+    public void pushVotesToDb(List<Vote> votes) {
 
         try {
             for (Vote V : votes) {
@@ -162,7 +160,6 @@ public class Scheduler {
             E.printStackTrace();
         }
 
-        return false;
     }
 
 

@@ -10,7 +10,6 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.amazonaws.services.sqs.model.Message;
 import com.example.evm_2.commons.DynamoDb;
 import com.example.evm_2.domain.Vote;
 import com.example.evm_2.domain.Voter;
@@ -40,6 +39,32 @@ public class VoterService {
         return vS;
     }
 
+    //Check if user has already cast a vote or not
+    public boolean HasCastTheVote(String cnic) {
+        try {
+            AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();
+
+            Vote V = new Vote();
+            V.setCnic(cnic);
+
+            V.setCnic(cnic);
+            DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
+            DynamoDBQueryExpression<Vote> queryExpression = new DynamoDBQueryExpression<Vote>()
+                    .withHashKeyValues(V);
+
+            List<Vote> itemList = mapper.query(Vote.class, queryExpression);
+
+            //if already exists false else true
+            return !itemList.isEmpty();
+
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+
+        return true;
+    }
+
 
     //To check if voting has started or not
     public boolean isVotingQueueReady() {
@@ -65,8 +90,14 @@ public class VoterService {
     //Casting vote
     public boolean castVote(Vote vote) {
         try {
+
+            //if he/she has cast the vote then return false
+            if (HasCastTheVote(vote.getCnic())) {
+                return false;
+            }
             ObjectMapper objectMapper = new ObjectMapper();
             SqsService.getInstance().sendMsg("voting", objectMapper.writeValueAsString(vote));
+            new Scheduler().CountVote();
             return true;
         } catch (Exception E) {
             E.printStackTrace();

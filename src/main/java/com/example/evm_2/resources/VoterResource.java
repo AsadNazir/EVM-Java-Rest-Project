@@ -1,10 +1,7 @@
 package com.example.evm_2.resources;
-
 import com.example.evm_2.commons.CustomResponse;
-import com.example.evm_2.domain.Party;
 import com.example.evm_2.domain.Vote;
 import com.example.evm_2.services.AuthService;
-import com.example.evm_2.services.PartyService;
 import com.example.evm_2.services.VoterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.*;
