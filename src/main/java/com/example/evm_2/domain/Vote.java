@@ -3,13 +3,22 @@ package com.example.evm_2.domain;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
-@DynamoDBTable(tableName = "Vote")
+@DynamoDBTable(tableName = "votes")
 public class Vote {
     String party;
     @DynamoDBHashKey
     String cnic;
 
     public Vote() {
+    }
+
+    @Override
+    public String toString() {
+        return "Vote{" +
+                "party='" + party + '\'' +
+                ", cnic='" + cnic + '\'' +
+                ", time='" + time + '\'' +
+                '}';
     }
 
     public Vote(String party, String cnic, String time) {

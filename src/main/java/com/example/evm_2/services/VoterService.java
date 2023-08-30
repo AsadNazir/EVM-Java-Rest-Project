@@ -1,11 +1,21 @@
 package com.example.evm_2.services;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
+import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import com.amazonaws.services.sqs.model.Message;
 import com.example.evm_2.commons.DynamoDb;
+import com.example.evm_2.domain.Vote;
 import com.example.evm_2.domain.Voter;
 import com.amazonaws.services.dynamodbv2.document.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.util.List;
@@ -18,6 +28,7 @@ public class VoterService {
     private VoterService() {
     }
 
+    //Singleton pattern
     public static VoterService getInstance() {
         if (vS == null) {
             synchronized (VoterService.class) {
@@ -27,6 +38,42 @@ public class VoterService {
             }
         }
         return vS;
+    }
+
+
+    //To check if voting has started or not
+    public boolean isVotingQueueReady() {
+        BasicAWSCredentials credentials = new BasicAWSCredentials("asad", "asad");
+        AmazonSQS sqs = AmazonSQSClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:4566", "us-east-1"))
+                .build();
+
+        try {
+            String queueName = "voting";
+            GetQueueUrlResult queueUrlResult = sqs.getQueueUrl(new GetQueueUrlRequest(queueName));
+            return true; // Queue exists
+        } catch (com.amazonaws.services.sqs.model.QueueDoesNotExistException e) {
+            // Queue doesn't exist
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false; // Error occurred
+        }
+    }
+
+    //Casting vote
+    public boolean castVote(Vote vote) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            SqsService.getInstance().sendMsg("voting", objectMapper.writeValueAsString(vote));
+            return true;
+        } catch (Exception E) {
+            E.printStackTrace();
+
+        }
+
+        return false;
     }
 
 
@@ -57,13 +104,12 @@ public class VoterService {
         return null; // If no voter with the given CNIC is found
     }
 
-    public boolean addVoter(Voter voter)
-    {
+    public boolean addVoter(Voter voter) {
         try {
             AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();
             DynamoDB db = new DynamoDB(amazonDynamoDB);
 
-            Table T= db.getTable("voter");
+            Table T = db.getTable("voter");
 
             Item I = new Item().withPrimaryKey("cnic", voter.getCnic())
                     .withString("email", voter.getEmail())
@@ -73,9 +119,7 @@ public class VoterService {
             T.putItem(I);
 
             return true;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("Occurred in addVoter Voter Service");
             e.printStackTrace();
         }
@@ -83,11 +127,6 @@ public class VoterService {
         return false;
 
     }
-
-//    public boolean castVote(Object vote)
-//    {}
-
-
 
 
 }

@@ -59,6 +59,21 @@ public class AuthService {
 
     }
 
+    public boolean isVoter(String jwtToken)
+    {
+        try {
+            DecodedJWT decodedJWT = JWT.require(Credentials.SECRET_KEY_JWT)
+                    .build()
+                    .verify(jwtToken);
+
+            return decodedJWT.getSubject().equalsIgnoreCase("voter");
+        } catch (Exception E) {
+            E.printStackTrace();
+            return false;
+        }
+    }
+
+
     public boolean isAdmin(String jwtToken) {
         try {//Takes the Header Authorization and just returns the payload
             DecodedJWT decodedJWT = JWT.require(Credentials.SECRET_KEY_JWT)

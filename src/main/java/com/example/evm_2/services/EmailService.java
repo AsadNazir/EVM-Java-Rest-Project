@@ -5,6 +5,8 @@ import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import java.util.Properties;
 
+
+//Email Service class use to send emails
 public class EmailService {
 
     private static volatile EmailService instance;

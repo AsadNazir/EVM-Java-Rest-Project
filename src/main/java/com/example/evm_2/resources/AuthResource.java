@@ -12,6 +12,8 @@ import jakarta.ws.rs.Produces;
 import com.example.evm_2.commons.*;
 import jakarta.ws.rs.core.MediaType;
 
+
+//Used for Auth Services such as Jwt and registration
 @Path("/auth")
 public class AuthResource {
 

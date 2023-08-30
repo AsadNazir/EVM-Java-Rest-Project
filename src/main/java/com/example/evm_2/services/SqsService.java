@@ -4,13 +4,11 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.*;
 
 import java.util.List;
 
+//For handling all the CRUD operations from and on SQS
 public class SqsService {
 
     private static SqsService instance;
@@ -37,27 +35,45 @@ public class SqsService {
         System.out.println("Queue created: " + queueName);
     }
 
-    public boolean sendMsg(String queueName, String msgBody) {
+    public void sendMsg(String queueName, String msgBody) {
         try {
             String queueUrl = sqs.getQueueUrl(new GetQueueUrlRequest(queueName)).getQueueUrl();
             SendMessageRequest sendMessageRequest = new SendMessageRequest(queueUrl, msgBody);
             sqs.sendMessage(sendMessageRequest);
             System.out.println("Message sent to " + queueName + ": " + msgBody);
-            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
     }
 
     public List<Message> getAllMessages(String queueName) {
         String queueUrl = sqs.getQueueUrl(new GetQueueUrlRequest(queueName)).getQueueUrl();
-        List<Message> messages = sqs.receiveMessage(queueUrl).getMessages();
-        return messages;
+
+        return sqs.receiveMessage(queueUrl).getMessages();
     }
 
     public void close() {
         sqs.shutdown();
+    }
+
+    public void deleteMessage(String queueName, String receiptHandle) {
+        try {
+            String queueUrl = sqs.getQueueUrl(new GetQueueUrlRequest(queueName)).getQueueUrl();
+            sqs.deleteMessage(new DeleteMessageRequest(queueUrl, receiptHandle));
+            System.out.println("Message deleted: " + receiptHandle);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteQueue(String queueName) {
+        try {
+            String queueUrl = sqs.getQueueUrl(queueName).getQueueUrl();
+            sqs.deleteQueue(new DeleteQueueRequest(queueUrl));
+            System.out.println("Queue deleted: " + queueName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -46,7 +46,6 @@ public class AdminResource {
             }
             List<Party> L = PartyService.getInstance().getAllParties();
 
-
             return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, L))).build();
 
         } catch (Exception E) {
@@ -59,13 +58,17 @@ public class AdminResource {
 
     @POST
     @Path("/startVoting")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response startVoting(@HeaderParam("Authorization") String authorizationHeader) {
         try {
             if (!isAdmin(authorizationHeader)) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
             Scheduler scheduler = new Scheduler();
-            scheduler.startTheVoting();
+
+            //Starting the voting by taking time input in seconds
+            scheduler.startTheVoting(20);
             return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, "Voting has been started"))).build();
         } catch (Exception E) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred Voting cannot be started").build();
@@ -73,16 +76,14 @@ public class AdminResource {
     }
 
 
+    //Function to verify only admin has the access
     private boolean isAdmin(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-//            return Response.status(Response.Status.UNAUTHORIZED).build(); // No or invalid authorization token
             return false;
         }
 
 
         String jwtToken = authorizationHeader.substring("Bearer ".length());
-
-        //            return Response.status(Response.Status.UNAUTHORIZED).entity(new CustomResponse(true, "Unauthorized")).build(); // Token verification failed
         return AuthService.getInstance().isVerified(jwtToken) && AuthService.getInstance().isAdmin(jwtToken);
     }
 
