@@ -97,7 +97,8 @@ public class VoterService {
             }
             ObjectMapper objectMapper = new ObjectMapper();
             SqsService.getInstance().sendMsg("voting", objectMapper.writeValueAsString(vote));
-            new Scheduler().CountVote();
+            new Scheduler().pushVotesToDb(List.of(vote));
+
             return true;
         } catch (Exception E) {
             E.printStackTrace();

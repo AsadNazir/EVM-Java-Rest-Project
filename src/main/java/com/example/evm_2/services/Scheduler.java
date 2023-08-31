@@ -5,16 +5,16 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.sqs.model.*;
+import com.example.evm_2.commons.DbOperations;
 import com.example.evm_2.commons.DynamoDb;
 import com.example.evm_2.domain.Party;
 import com.example.evm_2.domain.Vote;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,23 +34,38 @@ public class Scheduler {
     public void startTheVoting(int time) {
         try {
 
-            //Adding 0 Entries to Party Votes
-            AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();
-            DynamoDB db = new DynamoDB(amazonDynamoDB);
+            //Deleting the Party Votes Table First and then creating it again
+            DbOperations dbOperations = new DbOperations();
+            if (dbOperations.tableExists("PartyVotes")) {
+                if (dbOperations.deleteTable("PartyVotes")) {
+                    System.out.println("PartyVotes Deleted");
+                }
+            }
 
-            Table T = db.getTable("PartyVotes");
+            //Creating the Party Votes Table Again
+            if (dbOperations.CreateTable(List.of(new KeySchemaElement("party", KeyType.HASH)), List.of(new AttributeDefinition("party", ScalarAttributeType.S)), "PartyVotes")) {
+                System.out.println("PartyVotes Created");
+            }
+
+
+            //Adding 0 Entries to Party Votes
 
             List<Party> parties = PartyService.getInstance().getAllParties();
 
             //Initializing all parties in Db with 0 votes when voting begun
+            List<Item> ItemList = new ArrayList<>();
             for (Party P : parties) {
                 Item I = new Item().withPrimaryKey("party", P.getRegNo())
                         .withNumber("votes", 0);
+                ItemList.add(I);
 
-                T.putItem(I);
             }
 
-            //if Admin Queue conatains some message delete it first
+            if (dbOperations.putData("PartyVotes", ItemList)) {
+                System.out.println("Party Votes has been initialised with 0");
+            }
+
+            //if Admin Queue contains some message delete it first
             List<Message> Msg = sqsService.getAllMessages("admin");
             if (!Msg.isEmpty()) {
                 sqsService.deleteMessage("admin", Msg.get(0).getReceiptHandle());
@@ -92,7 +107,7 @@ public class Scheduler {
                 System.out.println("Size: " + messages.size());
 
                 if (messages.isEmpty()) {
-                    System.out.println("No messages left. Stopping the task.");
+                    System.out.println("No messages left. Stopping the task in count vote");
                     break; // Exit the loop when there are no more messages
                 }
 
@@ -117,13 +132,16 @@ public class Scheduler {
     }
 
     public Map<String, Integer> getVoteCount() {
-
-        //This just simply returns the vote count in form of Map
-        //Party1 : voteCount1
-        //Part2 : voteCount2
+        DbOperations dbOperations = new DbOperations();
 
         List<Vote> votes = CountVote();
         Map<String, Integer> voteCount = new HashMap<>();
+        List<Item> updatedVoteCounts = new ArrayList<>();
+
+        if (votes.isEmpty())
+        {
+            System.out.println("this list is empty");
+        }
 
         for (Vote V : votes) {
             if (!voteCount.containsKey(V.getParty())) {
@@ -133,9 +151,31 @@ public class Scheduler {
             }
         }
 
-        //Write the code to display the map here
         for (Map.Entry<String, Integer> entry : voteCount.entrySet()) {
-            System.out.println(entry.getKey() + ": " + entry.getValue());
+            Item voteItem = new Item().withPrimaryKey("party", entry.getKey())
+                    .withNumber("votes", entry.getValue());
+
+            updatedVoteCounts.add(voteItem);
+
+            // Get old vote count from DynamoDB
+            Item oldVoteCount = dbOperations.getItemFromTable(entry.getKey(), "PartyVotes", "party");
+            BigDecimal oldVoteCountVal = oldVoteCount.getNumber("votes");
+
+            System.out.println("Here is the value of oldVoteCountVal : " + oldVoteCount);
+
+            // Calculate new vote count
+            int newVoteCountVal = entry.getValue() + oldVoteCountVal.intValue();
+
+            // Update the vote count in DynamoDB
+            dbOperations.updateTableItem(
+                    "PartyVotes",
+                    "party",
+                    entry.getKey(),
+                    "votes",
+                    String.valueOf(newVoteCountVal)
+            );
+
+            System.out.println(entry.getKey() + ": " + newVoteCountVal);
         }
 
         return voteCount;
