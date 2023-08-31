@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,6 +107,45 @@ public class DbOperations {
         Table table = dynamoDB.getTable(tableName);
         return table.getItem(primaryKeyName, primaryKey);
     }
+
+    public List<Item> getAllEntries(String tableName) {
+        List<Item> itemList = new ArrayList<>();
+
+        Map<String, AttributeValue> lastKeyEvaluated = null;
+        do {
+            ScanRequest scanRequest = new ScanRequest()
+                    .withTableName(tableName)
+                    .withExclusiveStartKey(lastKeyEvaluated);
+
+            ScanResult result = Db.scan(scanRequest);
+
+            for (Map<String, AttributeValue> item : result.getItems()) {
+                Item newItem = new Item(); // Create a new Item instance
+
+                // Populate the new item with attribute values from the retrieved item map
+                for (Map.Entry<String, AttributeValue> entry : item.entrySet()) {
+                    String attributeName = entry.getKey();
+                    AttributeValue attributeValue = entry.getValue();
+
+                    // Handle different types of attribute values, e.g., strings, numbers, etc.
+                    if (attributeValue.getS() != null) {
+                        newItem.withString(attributeName, attributeValue.getS());
+                    } else if (attributeValue.getN() != null) {
+                        newItem.withNumber(attributeName, new BigDecimal(attributeValue.getN()));
+                    }
+                    // Add more cases as needed for other attribute types
+                }
+
+                itemList.add(newItem); // Add the populated item to the list
+            }
+
+            lastKeyEvaluated = result.getLastEvaluatedKey();
+        } while (lastKeyEvaluated != null);
+
+        return itemList;
+    }
+
+
 
 
     public boolean CreateTable(List<KeySchemaElement> keySchemaElements, List<AttributeDefinition> attributeDefinitions, String TableName) {

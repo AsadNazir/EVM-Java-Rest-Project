@@ -11,6 +11,7 @@ import com.example.evm_2.commons.DbOperations;
 import com.example.evm_2.commons.DynamoDb;
 import com.example.evm_2.domain.Party;
 import com.example.evm_2.domain.Vote;
+import com.example.evm_2.domain.VoteCounts;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
@@ -89,10 +90,11 @@ public class Scheduler {
 
         //This will count the votes and push all the votes from the SQS to db
         getVoteCount();
-
+        getAllVoteCount();
         //Deleting the voting SQS after the use to indicate voting has stopped
         SqsService.getInstance().deleteQueue("voting");
     }
+
 
 
     public List<Vote> CountVote() {
@@ -131,7 +133,7 @@ public class Scheduler {
         return AllVotes;
     }
 
-    public Map<String, Integer> getVoteCount() {
+    public void getVoteCount() {
         DbOperations dbOperations = new DbOperations();
 
         List<Vote> votes = CountVote();
@@ -161,8 +163,6 @@ public class Scheduler {
             Item oldVoteCount = dbOperations.getItemFromTable(entry.getKey(), "PartyVotes", "party");
             BigDecimal oldVoteCountVal = oldVoteCount.getNumber("votes");
 
-            System.out.println("Here is the value of oldVoteCountVal : " + oldVoteCount);
-
             // Calculate new vote count
             int newVoteCountVal = entry.getValue() + oldVoteCountVal.intValue();
 
@@ -178,7 +178,25 @@ public class Scheduler {
             System.out.println(entry.getKey() + ": " + newVoteCountVal);
         }
 
-        return voteCount;
+    }
+
+    public List<VoteCounts> getAllVoteCount()
+    {
+        DbOperations dbOperations = new DbOperations();
+        if(VoterService.getInstance().isVotingQueueReady())
+        {
+            getVoteCount();
+        };
+
+        List<Item> itemList = dbOperations.getAllEntries("PartyVotes");
+        List<VoteCounts> voteCountsList = new ArrayList<>();
+
+        for (Item I : itemList)
+        {
+            voteCountsList.add(new VoteCounts(I.getString("party"),I.getNumber("votes").intValue()));
+        }
+
+        return voteCountsList;
     }
 
 

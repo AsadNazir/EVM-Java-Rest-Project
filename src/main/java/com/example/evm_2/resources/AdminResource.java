@@ -79,8 +79,29 @@ public class AdminResource {
             Scheduler scheduler = new Scheduler();
 
             //Starting the voting by taking time input in seconds
-            scheduler.startTheVoting(20);
+            scheduler.startTheVoting(40);
             return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, "Voting has been started"))).build();
+        } catch (Exception E) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred Voting cannot be started").build();
+        }
+    }
+
+    @GET
+    @Path("/getVoteCount")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getVoteCount(@HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            if (!isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            //if voting has started or not
+            if (!VoterService.getInstance().isVotingQueueReady()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has already been started")).build();
+            }
+            Scheduler scheduler = new Scheduler();
+            return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, scheduler.getAllVoteCount()))).build();
         } catch (Exception E) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred Voting cannot be started").build();
         }
