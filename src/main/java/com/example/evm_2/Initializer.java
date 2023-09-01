@@ -9,7 +9,7 @@ import jakarta.servlet.annotation.WebListener;
 import java.util.List;
 
 @WebListener
-public class AdminQueueInitializer implements ServletContextListener {
+public class Initializer implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
