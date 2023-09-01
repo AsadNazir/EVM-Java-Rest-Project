@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+    /* display: flex !important;
+    justify-content: center;
+    align-items: center; */
+    min-width: 320px;
+    background-color: #ebebeb;
+    min-height: 100vh;
+  }
+  .LoginWrapper
+  {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .Login
+  {
+    width: clamp(300px, 90%, 400px);
+  }
+  .Login h1, .Register h1
+  {
+    text-align: center;
+    margin: 2rem 0 ;
+  }
+  
