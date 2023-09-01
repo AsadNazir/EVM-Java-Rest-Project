@@ -1,9 +1,8 @@
 package com.example.evm_2.commons;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
@@ -32,6 +31,43 @@ public class DbOperations {
         }
 
         return true;
+    }
+
+
+    public boolean deleteItem(String primaryKey, String primaryKeyVal, String tableName) {
+        DynamoDB dynamoDB = new DynamoDB(Db);
+        Table table = dynamoDB.getTable(tableName);
+
+        DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+                .withPrimaryKey(primaryKey, primaryKeyVal); // Assuming the primary key is named "primaryKey"
+        try {
+            DeleteItemOutcome deleteItem = table.deleteItem(deleteItemSpec);
+            System.out.println(deleteItem.toString());
+            return true; // Item deleted successfully
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false; // Item deletion failed
+        }
+    }
+
+    public boolean deleteItem(String primaryKey, String primaryKeyVal, String tableName, String rangeKey, String rangeKeyVal) {
+        DynamoDB dynamoDB = new DynamoDB(Db);
+        Table table = dynamoDB.getTable(tableName);
+
+        PrimaryKey primaryKeyToDelete = new PrimaryKey(primaryKey, primaryKeyVal, rangeKey, rangeKeyVal);
+
+        DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+                .withPrimaryKey(primaryKeyToDelete);
+
+        try {
+            table.deleteItem(deleteItemSpec);
+            System.out.println("Item deleted successfully.");
+            return true; // Item deleted successfully
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Item deletion failed: " + e.getMessage());
+            return false; // Item deletion failed
+        }
     }
 
     public boolean deleteTable(String TableName) {
@@ -144,8 +180,6 @@ public class DbOperations {
 
         return itemList;
     }
-
-
 
 
     public boolean CreateTable(List<KeySchemaElement> keySchemaElements, List<AttributeDefinition> attributeDefinitions, String TableName) {

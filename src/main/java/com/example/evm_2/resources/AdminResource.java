@@ -41,6 +41,55 @@ public class AdminResource {
         return null;
     }
 
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/deleteVoter")
+    public Response deleteVoter(@HeaderParam("Authorization") String authorizationHeader, @QueryParam("cnic") String cnic, @QueryParam("name") String name) {
+        try {
+            if (!this.isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+            //if voting has started or not
+            if (VoterService.getInstance().isVotingQueueReady()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has started cannot change voters")).build();
+            }
+
+            if (VoterService.getInstance().deleteVoter(cnic,name)) {
+                return Response.status(Response.Status.OK).entity(new CustomResponse(false, "Voter Deleted Successfully")).build();
+            }
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+        return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Error Occurred while deleting")).build();
+    }
+
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/deleteParty")
+    public Response deleteParty(@HeaderParam("Authorization") String authorizationHeader, @QueryParam("regNo") String regNo) {
+        try {
+
+            if (!this.isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+            //if voting has started or not
+            if (VoterService.getInstance().isVotingQueueReady()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has started cannot change party members")).build();
+            }
+
+            if (PartyService.getInstance().deleteParty(regNo)) {
+                return Response.status(Response.Status.OK).entity(new CustomResponse(false, "Party Deleted Successfully")).build();
+            }
+
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+        return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Error Occurred while deleting")).build();
+    }
+
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/getAllParties")
@@ -50,6 +99,7 @@ public class AdminResource {
             if (!this.isAdmin(authorizationHeader)) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
+
             List<Party> L = PartyService.getInstance().getAllParties();
 
             return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, L))).build();
@@ -59,7 +109,7 @@ public class AdminResource {
             E.printStackTrace();
         }
 
-        return null;
+        return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred").build();
     }
 
     @POST

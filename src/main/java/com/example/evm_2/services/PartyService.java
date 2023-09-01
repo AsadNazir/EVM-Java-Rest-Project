@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.example.evm_2.commons.DbOperations;
 import com.example.evm_2.commons.DynamoDb;
 import com.example.evm_2.commons.CustomResponse;
 import com.example.evm_2.domain.Party;
@@ -18,9 +19,11 @@ import java.util.Map;
 
 public class PartyService {
     private static PartyService instance;
+    private final DbOperations dbOperations;
 
     // Private constructor to prevent instantiation from outside
     private PartyService() {
+        dbOperations = new DbOperations();
     }
 
     // Static method to get the singleton instance
@@ -33,6 +36,22 @@ public class PartyService {
             }
         }
         return instance;
+    }
+
+
+    //delete a party
+    public boolean deleteParty(String regNo) {
+        try {
+
+            System.out.println(regNo);
+            return dbOperations.deleteItem("regNo", regNo, "Party");
+
+        } catch (Exception E) {
+            E.printStackTrace();
+
+        }
+
+        return false;
     }
 
 
@@ -60,16 +79,18 @@ public class PartyService {
 
     public Object addParty(Party party) {
         try {
-            AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();
-            DynamoDB db = new DynamoDB(amazonDynamoDB);
-
-            Table T = db.getTable("Party");
-
+//            AmazonDynamoDB amazonDynamoDB = DynamoDb.getInstance();
+//            DynamoDB db = new DynamoDB(amazonDynamoDB);
+//
+//            Table T = db.getTable("Party");
+//
             Item I = new Item().withPrimaryKey("regNo", party.getRegNo()).withString("partyName", party.getPartyName()).withString("partyLeader", party.getPartyLeader()).withString("electionSign", party.getElectionSign());
+//
+//            var t = T.putItem(I);
 
-            var t = T.putItem(I);
+            if (dbOperations.putData("Party", List.of(I)))
+                return new CustomResponse(false, "added successfully");
 
-            return new CustomResponse(false, "added successfully");
 
         } catch (Exception E) {
             E.printStackTrace();

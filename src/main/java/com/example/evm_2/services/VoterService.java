@@ -10,6 +10,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import com.example.evm_2.commons.DbOperations;
 import com.example.evm_2.commons.DynamoDb;
 import com.example.evm_2.domain.Vote;
 import com.example.evm_2.domain.Voter;
@@ -23,8 +24,9 @@ import java.util.List;
 public class VoterService {
 
     private static VoterService vS;
-
+    private final DbOperations dbOperations;
     private VoterService() {
+        this.dbOperations = new DbOperations();
     }
 
     //Singleton pattern
@@ -86,6 +88,21 @@ public class VoterService {
             return false; // Error occurred
         }
     }
+
+    //Delete a voter
+    public boolean deleteVoter(String cnic, String name)
+    {
+        try {
+            return dbOperations.deleteItem("cnic",cnic,"voter","name", name);
+        }
+        catch (Exception E)
+        {
+            E.printStackTrace();
+        }
+        return false;
+
+    }
+
 
     //Casting vote
     public boolean castVote(Vote vote) {
