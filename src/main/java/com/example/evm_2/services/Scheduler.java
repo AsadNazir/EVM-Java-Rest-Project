@@ -12,10 +12,14 @@ import com.example.evm_2.commons.DynamoDb;
 import com.example.evm_2.domain.Party;
 import com.example.evm_2.domain.Vote;
 import com.example.evm_2.domain.VoteCounts;
+import com.example.evm_2.domain.VotingTime;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +39,7 @@ public class Scheduler {
     public void startTheVoting(int time) {
         try {
 
+            ObjectMapper objectMapper = new ObjectMapper();
             //Deleting the Party Votes Table First and then creating it again
             DbOperations dbOperations = new DbOperations();
             if (dbOperations.tableExists("PartyVotes")) {
@@ -77,12 +82,40 @@ public class Scheduler {
             sqsService.createQueue("voting");
 
             //Pushing the message the voting has started
-            sqsService.sendMsg("admin", "Voting Started");
+            sqsService.sendMsg("admin", new Date().toString());
 
             //Starting the Scheduler to run the Task Function after exactly time seconds
             scheduler.schedule(this::Task, time, TimeUnit.SECONDS);
+
+            // Get the current time
+            LocalDateTime now = LocalDateTime.now();
+
+            // Add minutes to the current time
+            LocalDateTime updatedTime = now.plus(time, ChronoUnit.MINUTES);
+
+            Item item = new Item().withPrimaryKey("startingTime", now.toString()).withString("endingTime", updatedTime.toString());
+            boolean votingTimes = dbOperations.putData("votingTime", List.of(item));
+
+
         } catch (Exception E) {
             E.printStackTrace();
+        }
+    }
+
+    public VotingTime getVotingTime() {
+        try {
+            DbOperations dbOperations = new DbOperations();
+            List<Item> itemList = dbOperations.getAllEntries("votingTime");
+
+            if (itemList.isEmpty()) return null;
+
+            return new VotingTime(itemList.get(0).getString("startingTime"),
+                    itemList.get(0).getString("endingTime"));
+
+
+        } catch (Exception E) {
+            E.printStackTrace();
+            return null;
         }
     }
 
@@ -94,7 +127,6 @@ public class Scheduler {
         //Deleting the voting SQS after the use to indicate voting has stopped
         SqsService.getInstance().deleteQueue("voting");
     }
-
 
 
     public List<Vote> CountVote() {
@@ -140,8 +172,7 @@ public class Scheduler {
         Map<String, Integer> voteCount = new HashMap<>();
         List<Item> updatedVoteCounts = new ArrayList<>();
 
-        if (votes.isEmpty())
-        {
+        if (votes.isEmpty()) {
             System.out.println("this list is empty");
         }
 
@@ -180,20 +211,18 @@ public class Scheduler {
 
     }
 
-    public List<VoteCounts> getAllVoteCount()
-    {
+    public List<VoteCounts> getAllVoteCount() {
         DbOperations dbOperations = new DbOperations();
-        if(VoterService.getInstance().isVotingQueueReady())
-        {
+        if (VoterService.getInstance().isVotingQueueReady()) {
             getVoteCount();
-        };
+        }
+        ;
 
         List<Item> itemList = dbOperations.getAllEntries("PartyVotes");
         List<VoteCounts> voteCountsList = new ArrayList<>();
 
-        for (Item I : itemList)
-        {
-            voteCountsList.add(new VoteCounts(I.getString("party"),I.getNumber("votes").intValue()));
+        for (Item I : itemList) {
+            voteCountsList.add(new VoteCounts(I.getString("party"), I.getNumber("votes").intValue()));
         }
 
         return voteCountsList;
@@ -225,7 +254,22 @@ public class Scheduler {
     public void FinishTheVoting() {
 
         //Calling the Task and then shutting down
+        // Calling the Task and then shutting down
         Task();
+
+        // Shut down the scheduler
         scheduler.shutdown();
+
+        // Optionally, you can wait for the scheduler to terminate
+        try {
+            if (!scheduler.awaitTermination(30, TimeUnit.SECONDS)) {
+                // Handle the case where the scheduler did not terminate in 60 seconds
+                // You can log an error or take appropriate action here.
+                System.out.println("Scheduler did not shut down");
+            }
+        } catch (InterruptedException e) {
+            // Handle the InterruptedException
+            e.printStackTrace();
+        }
     }
 }

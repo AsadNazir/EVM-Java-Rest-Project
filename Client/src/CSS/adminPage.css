@@ -1,0 +1,55 @@
+.AdminPageWrapper
+{
+    width: clamp(300px, 90%, 1000px);
+    margin: 2rem auto;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-gap: 0.8rem;
+}
+.votingStatus
+{
+    text-align: center;
+    font-size: var(--font-size-xxlarge);
+    margin: 2rem 0;
+}
+.icons svg{
+    transform: scale(1.7);
+    margin: 1rem;
+}
+
+.btn h4{
+    font-size: var(--font-size-medium);
+}
+
+/* View Results CSS */
+.viewResults h1
+{
+    text-align: center;
+    font-size: var(--font-size-xxlarge);
+    margin: 2rem 0;
+}
+.positions
+{
+    display:grid;
+    width: clamp(300px, 90%, 700px);
+    margin: auto;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.positions h2,h3
+{
+   font-size: var(--font-size-xlarge);
+}
+
+.modal h5 
+{
+font-size: var(--font-size-xlarge);
+}
+/* Write media queries for mobile devices */
+@media screen and (max-width: 600px) {
+    .icons svg{
+        transform: scale(1.3);
+        margin: 1rem;
+    }
+}

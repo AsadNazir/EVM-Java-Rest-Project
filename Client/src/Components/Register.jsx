@@ -4,8 +4,8 @@ import React from 'react'
 export default function Register() {
 
     let register = async (event) => {
-     event.preventDefault();
-     console.log("Calling this one")
+        event.preventDefault();
+        console.log("Calling this one")
     }
 
 

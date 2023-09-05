@@ -1,0 +1,8 @@
+.navbar-brand
+{
+    font-size: var(--font-size-xxlarge);
+}
+.btn-danger
+{
+    font-size: var(--font-size-small);
+}

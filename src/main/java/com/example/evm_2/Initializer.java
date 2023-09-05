@@ -15,7 +15,6 @@ public class Initializer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
 
         SqsService.getInstance().createQueue("admin");
-        SqsService.getInstance().sendMsg("admin", "Voting has not started");
     }
 
     @Override

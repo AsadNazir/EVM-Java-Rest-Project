@@ -36,6 +36,25 @@ public class VoterResource {
     }
 
 
+    @GET
+    @Path("/isVoter")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response verifyVoter(@HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            if (!isVoter(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            return Response.status(Response.Status.OK).entity(objectMapper.writeValueAsString(new CustomResponse(false, "voter"))).build();
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+
+        return Response.status(Response.Status.BAD_REQUEST).build();
+
+    }
+
 
     @GET
     @Path("/isVotingReady")

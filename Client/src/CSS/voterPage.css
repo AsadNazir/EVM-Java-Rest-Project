@@ -1,0 +1,9 @@
+.VoterPageWrapper
+{
+    width: clamp(300px, 90%, 500px);
+    margin: 2rem auto;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-gap: 0.8rem;
+}

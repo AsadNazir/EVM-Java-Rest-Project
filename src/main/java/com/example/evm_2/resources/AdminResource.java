@@ -1,16 +1,18 @@
 package com.example.evm_2.resources;
 
+import com.amazonaws.services.sqs.model.Message;
 import com.example.evm_2.domain.Party;
-import com.example.evm_2.services.AuthService;
-import com.example.evm_2.services.PartyService;
-import com.example.evm_2.services.Scheduler;
-import com.example.evm_2.services.VoterService;
+import com.example.evm_2.domain.VotingTime;
+import com.example.evm_2.services.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.*;
 import com.example.evm_2.commons.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 
 @Path("/admin")
@@ -29,7 +31,7 @@ public class AdminResource {
 
             //Checking if voting has started or not
             if (VoterService.getInstance().isVotingQueueReady()) {
-                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has satrted cannot add more Parties")).build();
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has started cannot add more Parties")).build();
             }
 
             Party P = objectMapper.readValue(party, Party.class);
@@ -54,7 +56,7 @@ public class AdminResource {
                 return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has started cannot change voters")).build();
             }
 
-            if (VoterService.getInstance().deleteVoter(cnic,name)) {
+            if (VoterService.getInstance().deleteVoter(cnic, name)) {
                 return Response.status(Response.Status.OK).entity(new CustomResponse(false, "Voter Deleted Successfully")).build();
             }
 
@@ -112,29 +114,91 @@ public class AdminResource {
         return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred").build();
     }
 
-    @POST
-    @Path("/startVoting")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @GET
+    @Path("/getVotingTime")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response startVoting(@HeaderParam("Authorization") String authorizationHeader) {
+    public Response getVotingTimes(@HeaderParam("Authorization") String authorizationHeader) {
         try {
+            Scheduler scheduler = new Scheduler();
             if (!isAdmin(authorizationHeader)) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
 
             //if voting has started or not
             if (VoterService.getInstance().isVotingQueueReady()) {
-                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has already been started")).build();
-            }
-            Scheduler scheduler = new Scheduler();
 
-            //Starting the voting by taking time input in seconds
-            scheduler.startTheVoting(40);
-            return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, "Voting has been started"))).build();
+                return Response.status(Response.Status.OK).entity(objectMapper.writeValueAsString(scheduler.getVotingTime())).build();
+            }
+
+            return Response.status(200).entity(new CustomResponse(true, "Voting has ended")).build();
+
         } catch (Exception E) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred Voting cannot be started").build();
+            E.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Error Occurred Voting times could not be fetched")).build();
         }
     }
+
+    @POST
+    @Path("/startVoting")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response startVoting(@HeaderParam("Authorization") String authorizationHeader, @QueryParam("startVoting") int startVoting) {
+        try {
+            Scheduler scheduler = new Scheduler();
+            if (!isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            //it means to stop voting
+            if (startVoting == -99 && VoterService.getInstance().isVotingQueueReady()) {
+                scheduler.FinishTheVoting();
+
+                return Response.status(Response.Status.OK).entity(new CustomResponse(false, "Voting has been stopped")).build();
+            }
+
+            if (startVoting < 1) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Error Occurred voting can not be started")).build();
+            }
+
+            //if voting has started or not
+            if (VoterService.getInstance().isVotingQueueReady()) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has already been started")).build();
+            }
+
+            //Starting the voting by taking time input in Minutes
+            scheduler.startTheVoting(startVoting);
+
+            // Get the current time
+            LocalDateTime now = LocalDateTime.now();
+            // Add minutes to the current time
+            LocalDateTime updatedTime = now.plus(startVoting, ChronoUnit.MINUTES);
+            SqsService.getInstance().sendMsg("admin", objectMapper.writeValueAsString(new VotingTime(now.toString(), updatedTime.toString())));
+
+            return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, "Voting has been started"))).build();
+        } catch (Exception E) {
+            E.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Error Occurred voting can not be started")).build();
+        }
+    }
+
+    @GET
+    @Path("/isAdmin")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response verifyAdmin(@HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            if (!isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            return Response.status(Response.Status.OK).entity(objectMapper.writeValueAsString(new CustomResponse(false, "Admin"))).build();
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+
+        return Response.status(Response.Status.BAD_REQUEST).build();
+
+    }
+
 
     @GET
     @Path("/getVoteCount")
@@ -168,5 +232,6 @@ public class AdminResource {
         String jwtToken = authorizationHeader.substring("Bearer ".length());
         return AuthService.getInstance().isVerified(jwtToken) && AuthService.getInstance().isAdmin(jwtToken);
     }
+
 
 }

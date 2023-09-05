@@ -22,6 +22,6 @@ public class CORS implements ContainerResponseFilter {
                 "origin, content-type, accept, authorization");
         responseContext.getHeaders().add(
                 "Access-Control-Allow-Methods",
-                "POST, PUT, DELETE, OPTIONS, HEAD");
+                "GET, POST, PUT, DELETE, OPTIONS, HEAD");
     }
 }

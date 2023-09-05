@@ -1,23 +1,35 @@
 body {
     margin: 0;
-    /* display: flex !important;
-    justify-content: center;
-    align-items: center; */
     min-width: 320px;
     background-color: #ebebeb;
     min-height: 100vh;
   }
-  .LoginWrapper
+  .LoginWrapper, .Wrapper
   {
     width: 100%;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: #ebebeb;
+  }
+
+  .Wrapper
+  {
+    min-height: 80vh;
+    background-color: transparent;
+  }
+  .Wrapper form{
+    width: clamp(300px,70%,450px);
+  }
+
+  .Wrapper h1{
+    font-size: var(--font-size-xxlarge);
+    margin: 2rem 0;
   }
   .Login
   {
-    width: clamp(300px, 90%, 400px);
+    width: clamp(300px, 90%, 450px);
   }
   .Login h1, .Register h1
   {

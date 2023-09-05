@@ -126,7 +126,7 @@ public class AuthService {
 
             Voter v = VoterService.getInstance().getVoterByCnic(voter.getCnic(), voter.getName());
             if (v == null) {
-                return new CustomResponse(false, "Invalid Credentials");
+                return new CustomResponse(true, "Invalid Credentials");
             }
 
 
