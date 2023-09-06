@@ -102,7 +102,7 @@ public class AuthService {
             }
 
             boolean result = VoterService.getInstance().addVoter(voter);
-            boolean emailSent = EmailService.getInstance().sendMail("bsef20m522@pucit.edu.pk", "Hi " + voter.getName() + "\n\nYou have been successfully registered!\n\n Thanks !");
+            boolean emailSent = EmailService.getInstance().sendMail(voter.getEmail(), "Hi " + voter.getName() + "\n\nYou have been successfully registered!\n\n Thanks !");
 
 
             if (result && emailSent)

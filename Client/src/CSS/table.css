@@ -3,6 +3,8 @@
     width: clamp(300px, 90%, 1000px);
     margin: auto;
     font-size: var(--font-size-small);
+    display: grid ;
+    place-content: center;
 }
 .searchBar 
 {
@@ -21,4 +23,8 @@
     font-size: 1rem;
     margin-right: 1rem;
     font-size: var(--font-size-small);
+}
+
+table{
+    width: clamp(300px,90vw,1000px) !important;
 }

@@ -4,6 +4,41 @@ import routes from './routes.jsx'
 
 
 const services = {
+
+    getVotingStatus: async () => {
+        //get voting status from database
+
+        if(sessionStorage.getItem("token") === null){
+            return false;
+        }
+        
+        let result = await fetch(routes.getVotingStatusAdmin, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer " + sessionStorage.getItem("token")
+            }
+        })
+
+        if
+        (result.status === 401) {
+            alert('Session Expired');
+            return;
+        }
+
+        let data = await result.json();
+
+        if (data.error === false) {
+            return false;
+        }
+
+        return data.data;
+
+    },
+
+
+
+
     isVoter: async () => {
         if(sessionStorage.getItem("token") === null){
             return false;

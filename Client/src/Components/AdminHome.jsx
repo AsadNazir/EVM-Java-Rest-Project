@@ -13,7 +13,11 @@ import services from '../services';
 
 export default function AdminHome() {
     const [votingStarted, setVotingStarted] = useState(false);
+    const [votingloading, setVotingLoading] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [allParties, setAllParties] = useState([]);
+
+
     const navigate = useNavigate();
 
 
@@ -39,15 +43,16 @@ export default function AdminHome() {
 
         //setLoading(!loading);
         //change voting status in database
-        setVotingStarted(!votingStarted);
+        setVotingLoading(!votingStarted);
     }
-    const confirmHandler = () => {
-        //delete party from database
+    const confirmHandler = async (id) => {
+
+        
     }
 
     return (
         <>{
-            loading ? <div class="spinner-border text-light" role="status">
+            votingloading ? <div class="spinner-border text-light" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div> :
                 votingStarted ? <h1 className='votingStatus'>Voting Started</h1> : <h1 className='votingStatus'>Voting has not Started</h1>}
@@ -82,7 +87,7 @@ export default function AdminHome() {
                     </div>
                 </div>
             </div>
-            <Modal statement={"Do u want to delete it ?"} confirmHandler={confirmHandler} />
+           
 
         </>
     )

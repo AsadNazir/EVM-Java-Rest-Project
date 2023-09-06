@@ -13,8 +13,8 @@ export default function Modal(props) {
                       {props.statement}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" data-bs-dismiss="modal" class="btn btn-success" onClick={()=>props.confirmHandler}>Confirm</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onClick={()=>props.onCancelHandler}>Cancel</button>
+                        <button type="button" data-bs-dismiss="modal" class="btn btn-success" onClick={()=>props.confirmHandler(props.selected)}>Confirm</button>
                     </div>
                 </div>
             </div>

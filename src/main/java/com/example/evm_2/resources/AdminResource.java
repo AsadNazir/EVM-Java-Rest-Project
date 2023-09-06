@@ -1,6 +1,7 @@
 package com.example.evm_2.resources;
 
 import com.amazonaws.services.sqs.model.Message;
+import com.example.evm_2.domain.Admin;
 import com.example.evm_2.domain.Party;
 import com.example.evm_2.domain.VotingTime;
 import com.example.evm_2.services.*;
@@ -25,7 +26,7 @@ public class AdminResource {
     @Path("/addParty")
     public Response addParty(@HeaderParam("Authorization") String authorizationHeader, String party) {
         try {
-            if (this.isAdmin(authorizationHeader)) {
+            if (!this.isAdmin(authorizationHeader)) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
 
@@ -219,6 +220,41 @@ public class AdminResource {
         } catch (Exception E) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred Voting cannot be started").build();
         }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/getAllVoters")
+    public Response getAllVoters(@HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            if (!isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+            return Response.status(200).entity(new CustomResponse(false, VoterService.getInstance().getAllVoters())).build();
+
+        } catch (Exception E) {
+            E.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity("Error Occurred Voting cannot be started").build();
+        }
+    }
+
+    @GET
+    @Path("/isVotingReady")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response isVotingReady(@HeaderParam("Authorization") String authorizationHeader) {
+        try {
+            if (!isAdmin(authorizationHeader)) {
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+
+            return Response.status(Response.Status.OK).entity(objectMapper.writeValueAsString(new CustomResponse(false, VoterService.getInstance().isVotingQueueReady()))).build();
+
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+
+        return Response.status(Response.Status.BAD_REQUEST).build();
+
     }
 
 

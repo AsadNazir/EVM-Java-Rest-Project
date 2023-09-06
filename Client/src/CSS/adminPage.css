@@ -46,6 +46,7 @@
 {
 font-size: var(--font-size-xlarge);
 }
+
 /* Write media queries for mobile devices */
 @media screen and (max-width: 600px) {
     .icons svg{

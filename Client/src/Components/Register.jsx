@@ -1,19 +1,56 @@
 import React from 'react'
-
+import routes from '../routes';
+import { Modal } from 'bootstrap';
 
 export default function Register() {
 
+    const [loader, setLoader] = React.useState(false);
+
     let register = async (event) => {
         event.preventDefault();
-        console.log("Calling this one")
+        setLoader(true);
+        let name = document.getElementById('name').value;
+        let cnic = document.getElementById('cnic').value;
+        let password = document.getElementById('password').value;
+        let email = document.getElementById('email').value;
+
+        let data = {
+            name,
+            cnic,
+            password,
+            email
+        }
+
+        let response = await fetch(routes.regsiterVoter, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data),
+        })
+
+        let result = await response.json();
+        console.log(result);
+        if (result.error === false) {
+
+            alert('Registered Successfully');
+        } else {
+            alert('Registration Failed');
+        }
+
+        setLoader(false);
     }
 
 
 
 
     return (
+
         <div class="Register LoginWrapper" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
-            <form onSubmit={register}>
+            {loader ? <div class="spinner-border text-primary" role="status">
+                <span class="sr-only"></span>
+
+            </div> : <form onSubmit={register}>
 
                 <h1 class="text-center">Register</h1>
 
@@ -25,6 +62,10 @@ export default function Register() {
                 <div class="form-outline mb-4">
                     <input type="text" required pattern="^\d{13}$" id="cnic" class="form-control" />
                     <label class="form-label" for="registerName">CNIC</label>
+                </div>
+                <div class="form-outline mb-4">
+                    <input type="email" required id="email" class="form-control" />
+                    <label class="form-label" for="registerName">Email</label>
                 </div>
 
                 {/* <!-- Password input --> */}
@@ -53,7 +94,8 @@ export default function Register() {
                 <div className="btnDiv">
                     <button type='submit' class="btn btn-primary btn-block mb-3">Sign in</button>
                 </div>
-            </form>
+            </form>}
+
         </div>
     )
 }

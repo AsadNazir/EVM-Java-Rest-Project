@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.document.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 //Voter Service for all the Db related work
@@ -39,6 +40,27 @@ public class VoterService {
             }
         }
         return vS;
+    }
+
+    public List<Voter> getAllVoters()
+    {
+        try {
+
+            List<Voter> voterList = new ArrayList<>();
+
+           List<Item> voterItems= dbOperations.getAllEntries("voter");
+
+           for (Item I :voterItems)
+           {
+               voterList.add(new Voter(I.getString("email"),I.getString("cnic"),I.getString("password"),I.getString("name")));
+           }
+            return voterList;
+        }
+        catch (Exception E)
+        {
+            E.printStackTrace();
+            return null;
+        }
     }
 
     //Check if user has already cast a vote or not
