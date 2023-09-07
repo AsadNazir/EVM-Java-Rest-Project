@@ -1,17 +1,134 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import "../CSS/adminPage.css"
 import { useState } from 'react';
 import { BsFill1CircleFill, BsFill2CircleFill } from 'react-icons/bs';
-import Table from './Table';
+import services from '../services';
+import routes from '../routes';
+import { useNavigate } from 'react-router-dom';
+
+
 export default function ViewResults() {
 
     const [votingStarted, setVotingStarted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState([]);
+    const [parties, setParties] = useState([]);
+    const navigate = useNavigate();
 
-    const getVotingStatus = async () => {
-        //get voting status from database
-        setVotingStarted(true);
+
+
+    async function getParties() {
+
+        setLoading(true);
+        const response = await fetch(routes.getAllParties, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer " + sessionStorage.getItem("token")
+            }
+        })
+
+        if (response.status === 401) {
+            alert('Session Expired');
+            navigate("/adminLogin");
+            return;
+        }
+
+        let result = await response.json();
+
+        setParties(result.data);
+        setLoading(false);
     }
+
+
+    async function getResults() {
+        setLoading(true);
+        let respone = await fetch(routes.getResultsAdmin, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer " + sessionStorage.getItem("token")
+            }
+        }
+        )
+
+        if (respone.status === 401) {
+            alert('Session Expired');
+            return;
+        }
+
+        let data = await respone.json();
+
+        if (data.error === true) {
+            alert('Failed to get results');
+            return;
+        }
+
+        setResults(data.data);
+        sortParties();
+        setLoading(false);
+        console.log(results);
+
+    }
+
+    // Sort results in descending order
+    //parallel sort parties
+
+    function sortParties() {
+        let tempParties = [...parties];
+        let tempResults = [...results];
+
+        for (let i = 0; i < tempResults.length; i++) {
+            for (let j = i + 1; j < tempResults.length; j++) {
+                if (tempResults[i].votes < tempResults[j].votes) {
+
+                    //shift parties
+                    let temp = tempParties[i];
+                    tempParties[i] = tempParties[j];
+                    tempParties[j] = temp;
+
+                    //shift results
+                    let temp2 = tempResults[i];
+                    tempResults[i] = tempResults[j];
+                    tempResults[j] = temp2;
+                }
+            }
+        }
+
+        setResults(tempResults);
+        setParties(tempParties);
+
+        console.log(tempResults);
+        console.log(tempParties);
+
+
+    }
+
+
+
+    useEffect(() => {
+
+        services.getVotingStatus().then(data => {
+            setVotingStarted(data);
+        })
+
+        async function checkAdmin() {
+            const isAdmin = await services.isAdmin().then(data => data);
+            if (!isAdmin) {
+                navigate("/adminLogin");
+            }
+
+            getResults();
+            getParties();
+
+
+        }
+
+        checkAdmin();
+
+    }, [])
+
+
 
     return (
         <div className='viewResults'>
@@ -19,15 +136,15 @@ export default function ViewResults() {
             <div className='positions'>
                 <div to={"addParty"} type="button" class="btn btn-success btn-lg btn-block"><div className='icons'><BsFill1CircleFill /></div>
                     <div className='stats'>
-                        <h3>Party 1</h3>
-                        <h2>1000 Votes</h2>
+                        <h3>{parties[0]? parties[0].partyName: "null"}</h3>
+                        <h2>votes {results[0]? results[0].votes: "null"}</h2>
                     </div>
 
                 </div>
                 <div to={"addParty"} type="button" class="btn btn-danger btn-lg btn-block"><div className='icons'><BsFill2CircleFill /></div>
                     <div className='stats'>
-                        <h3>Party 2</h3>
-                        <h2>100 Votes</h2>
+                        <h3></h3>
+                        <h2>votes </h2>
                     </div>
 
                 </div>
@@ -50,6 +167,19 @@ export default function ViewResults() {
                         </tr>
                     </thead>
                     <tbody>
+                            {
+                                results.map((result, index) => {
+                                    return (
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>{result.regNo}</td>
+                                            <td>{parties[index].partyName}</td>
+                                            <td>{parties[index].electionSign}</td>
+                                            <td>{result.votes}</td>
+                                        </tr>
+                                    )
+                                })
+                            }
                         <tr>
                             <td>1</td>
                             <td>Mark</td>
@@ -64,3 +194,4 @@ export default function ViewResults() {
         </div>
     )
 }
+

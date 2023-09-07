@@ -3,6 +3,7 @@ package com.example.evm_2.commons;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
@@ -97,17 +98,19 @@ public class DbOperations {
         return true;
     }
 
-    public boolean deleteAllEntries(String TableName, String primarKey) {
-        Table table = new DynamoDB(Db).getTable(TableName);
+    public boolean deleteAllEntries(String TableName, String primaryKey) {
+        DynamoDB dynamoDB = new DynamoDB(Db);
+        Table table = dynamoDB.getTable(TableName);
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName(TableName);
+        ScanSpec scanSpec = new ScanSpec();
+        ItemCollection<ScanOutcome> items = table.scan(scanSpec);
 
-        ScanResult result = Db.scan(scanRequest);
+        for (Item item : items) {
+            DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+                    .withPrimaryKey(primaryKey, item.get(primaryKey));
 
-        result.getItems().forEach(item -> {
-            table.deleteItem(primarKey, item.get(primarKey));
-        });
+            DeleteItemOutcome outcome = table.deleteItem(deleteItemSpec);
+        }
 
         return true;
     }

@@ -39,6 +39,7 @@ public class Scheduler {
     public void startTheVoting(int time) {
         try {
 
+
             ObjectMapper objectMapper = new ObjectMapper();
             //Deleting the Party Votes Table First and then creating it again
             DbOperations dbOperations = new DbOperations();
@@ -76,6 +77,8 @@ public class Scheduler {
             if (!Msg.isEmpty()) {
                 sqsService.deleteMessage("admin", Msg.get(0).getReceiptHandle());
             }
+
+            dbOperations.deleteAllEntries("votes","cnic");
 
 
             //Starting the Voting Queue
@@ -216,7 +219,6 @@ public class Scheduler {
         if (VoterService.getInstance().isVotingQueueReady()) {
             getVoteCount();
         }
-        ;
 
         List<Item> itemList = dbOperations.getAllEntries("PartyVotes");
         List<VoteCounts> voteCountsList = new ArrayList<>();

@@ -211,10 +211,6 @@ public class AdminResource {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
 
-            //if voting has started or not
-            if (!VoterService.getInstance().isVotingQueueReady()) {
-                return Response.status(Response.Status.BAD_REQUEST).entity(new CustomResponse(true, "Voting has already been started")).build();
-            }
             Scheduler scheduler = new Scheduler();
             return Response.status(200).entity(objectMapper.writeValueAsString(new CustomResponse(false, scheduler.getAllVoteCount()))).build();
         } catch (Exception E) {

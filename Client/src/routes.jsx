@@ -10,7 +10,7 @@ const routes = {
     getVotingStatusVoter: "http://localhost:8888/EVM_2_war_exploded/voter/isVotingReady",
     getVotingStatusAdmin: "http://localhost:8888/EVM_2_war_exploded/admin/isVotingReady",
     isAdmin: "http://localhost:8888/EVM_2_war_exploded/admin/isAdmin",
-    getResultsAdmin: "",
+    getResultsAdmin: "http://localhost:8888/EVM_2_war_exploded/admin/getVoteCount",
     getResultsVoter: "",
     votingStarted: "http://localhost:8888/EVM_2_war_exploded/voter/isVotingReady",
     getVoteCount: "http://localhost:8888/EVM_2_war_exploded/admin/getVoteCount",

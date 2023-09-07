@@ -1,6 +1,7 @@
 package com.example.evm_2;
 
 import com.amazonaws.services.sqs.model.Message;
+import com.example.evm_2.commons.DbOperations;
 import com.example.evm_2.services.SqsService;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -15,6 +16,7 @@ public class Initializer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
 
         SqsService.getInstance().createQueue("admin");
+
     }
 
     @Override
